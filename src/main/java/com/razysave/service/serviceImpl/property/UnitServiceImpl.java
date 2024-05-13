@@ -18,8 +18,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -131,7 +129,6 @@ public class UnitServiceImpl implements UnitService {
                 building.setUnits(units);
                 buildingRepository.save(building);
             }
-            List<Device> devicesToUpdate = new ArrayList<>();
            Tenant tenant = unit.getTenant();
             if (tenant != null) {
                 tenantService.deleteTenantById(tenant.getId());

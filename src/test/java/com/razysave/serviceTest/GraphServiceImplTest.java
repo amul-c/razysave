@@ -6,25 +6,33 @@ import com.razysave.dto.property.GraphYearDto;
 import com.razysave.entity.property.GraphProperty;
 import com.razysave.entity.property.GraphUnit;
 import com.razysave.exception.GraphNotFoundException;
-import com.razysave.service.property.GraphService;
+import com.razysave.repository.property.GraphPropertyRepository;
+import com.razysave.repository.property.GraphUnitRepository;
+import com.razysave.service.serviceImpl.property.GraphServiceImpl;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.springframework.boot.test.context.SpringBootTest;
 import java.util.List;
+import java.util.Optional;
+import static org.mockito.Mockito.*;
 
 @SpringBootTest
 public class GraphServiceImplTest {
-    @Autowired
-    GraphService graphService;
-
+    @InjectMocks
+    GraphServiceImpl graphService;
+    @Mock
+    GraphUnitRepository graphUnitRepository;
+    @Mock
+    GraphPropertyRepository graphPropertyRepository;
     @Test
     public void getGraphPropertyByWeekSuccessTest() {
         GraphProperty graphProperty = new GraphProperty();
         graphProperty.setPropertyId(200);
         graphProperty.setId(200);
-        GraphProperty graphPropertySaved = graphService.addGraphProperty(graphProperty);
-        List<GraphWeekDto> graphWeekDtos = graphService.getGraphPropertyByWeek(graphPropertySaved.getPropertyId());
+        when(graphPropertyRepository.findByPropertyId(graphProperty.getPropertyId())).thenReturn(graphProperty);
+        List<GraphWeekDto> graphWeekDtos = graphService.getGraphPropertyByWeek(graphProperty.getPropertyId());
         Assertions.assertTrue(graphWeekDtos.size() > 0);
     }
 
@@ -33,19 +41,19 @@ public class GraphServiceImplTest {
         GraphUnit graphUnit = new GraphUnit();
         graphUnit.setUnitId(200);
         graphUnit.setId(200);
-        GraphUnit graphUnitSaved = graphService.addGraphUnit(graphUnit);
-        List<GraphWeekDto> graphWeekDtos = graphService.getGraphUnitByWeek(graphUnitSaved.getUnitId());
+        when(graphUnitRepository.findByUnitId(graphUnit.getUnitId())).thenReturn(graphUnit);
+        List<GraphWeekDto> graphWeekDtos = graphService.getGraphUnitByWeek(graphUnit.getUnitId());
         Assertions.assertTrue(graphWeekDtos.size() > 0);
     }
 
     @Test
     public void getGraphPropertyByMonthSuccessTest() {
         GraphProperty graphProperty = new GraphProperty();
-        graphProperty.setPropertyId(1);
+        graphProperty.setPropertyId(200);
         graphProperty.setId(200);
-        GraphProperty graphPropertySaved = graphService.addGraphProperty(graphProperty);
-        GraphProperty graphPropertyGet = graphService.getGraphPropertytById(graphPropertySaved.getId());
-        Assertions.assertNotNull(graphPropertyGet);
+        when(graphPropertyRepository.findByPropertyId(graphProperty.getPropertyId())).thenReturn(graphProperty);
+        List<GraphMonthDto> graphMonthDtos = graphService.getGraphPropertyhByMonth(graphProperty.getId());
+        Assertions.assertTrue(graphMonthDtos.size() > 0);
     }
 
     @Test
@@ -53,8 +61,8 @@ public class GraphServiceImplTest {
         GraphUnit graphUnit = new GraphUnit();
         graphUnit.setUnitId(200);
         graphUnit.setId(200);
-        GraphUnit graphSaved = graphService.addGraphUnit(graphUnit);
-        List<GraphMonthDto> graphMonthDtos= graphService.getGraphUnitByMonth(graphSaved.getUnitId());
+        when(graphUnitRepository.findByUnitId(graphUnit.getUnitId())).thenReturn(graphUnit);
+        List<GraphMonthDto> graphMonthDtos= graphService.getGraphUnitByMonth(graphUnit.getUnitId());
         Assertions.assertNotNull(graphMonthDtos);
     }
 
@@ -63,8 +71,8 @@ public class GraphServiceImplTest {
         GraphProperty graphProperty = new GraphProperty();
         graphProperty.setPropertyId(200);
         graphProperty.setId(200);
-        GraphProperty graphPropertySaved = graphService.addGraphProperty(graphProperty);
-        List<GraphYearDto> graphYearDtos = graphService.getGraphByPropertyYear(graphPropertySaved.getId());
+        when(graphPropertyRepository.findByPropertyId(graphProperty.getPropertyId())).thenReturn(graphProperty);
+        List<GraphYearDto> graphYearDtos = graphService.getGraphByPropertyYear(graphProperty.getId());
         Assertions.assertNotNull(graphYearDtos);
     }
 
@@ -73,23 +81,24 @@ public class GraphServiceImplTest {
         GraphUnit graphUnit = new GraphUnit();
         graphUnit.setUnitId(200);
         graphUnit.setId(200);
-        GraphUnit graphUnitPropertySaved = graphService.addGraphUnit(graphUnit);
-        List<GraphYearDto> graphYearDtos = graphService.getGraphByUnitYear(graphUnitPropertySaved.getId());
+        when(graphUnitRepository.findByUnitId(graphUnit.getUnitId())).thenReturn(graphUnit);
+        List<GraphYearDto> graphYearDtos = graphService.getGraphByUnitYear(graphUnit.getId());
         Assertions.assertNotNull(graphYearDtos);
     }
 
     @Test
     public void getGraphPropertyByIdSuccessTest() {
         GraphProperty graphProperty = new GraphProperty();
-        graphProperty.setPropertyId(1);
+        graphProperty.setPropertyId(200);
         graphProperty.setId(200);
-        GraphProperty graphPropertySaved = graphService.addGraphProperty(graphProperty);
-        GraphProperty graphPropertyGet = graphService.getGraphPropertytById(graphPropertySaved.getId());
+        when(graphPropertyRepository.findById(graphProperty.getPropertyId())).thenReturn(Optional.of(graphProperty));
+        GraphProperty graphPropertyGet = graphService.getGraphPropertytById(graphProperty.getId());
         Assertions.assertNotNull(graphPropertyGet);
     }
 
     @Test
     public void getGraphPropertyByIdFailerTest() {
+        when(graphPropertyRepository.findById(200)).thenReturn(Optional.empty());
         Assertions.assertThrows(GraphNotFoundException.class, () -> graphService.getGraphPropertytById(2000));
     }
 
@@ -98,13 +107,14 @@ public class GraphServiceImplTest {
         GraphUnit graphUnit = new GraphUnit();
         graphUnit.setPropertyId(200);
         graphUnit.setId(200);
-        GraphUnit graphUnitSaved = graphService.addGraphUnit(graphUnit);
-        GraphUnit graphUnitGet = graphService.getGraphUnitById(graphUnitSaved.getId());
+        when(graphUnitRepository.findById(graphUnit.getId())).thenReturn(Optional.of(graphUnit));
+        GraphUnit graphUnitGet = graphService.getGraphUnitById(graphUnit.getId());
         Assertions.assertNotNull(graphUnitGet);
     }
 
     @Test
     public void getGraphUnitByIdFailerTest() {
+        when(graphUnitRepository.findById(200)).thenReturn(Optional.empty());
         Assertions.assertThrows(GraphNotFoundException.class, () -> graphService.getGraphUnitById(2000));
     }
 
@@ -113,8 +123,11 @@ public class GraphServiceImplTest {
         GraphProperty graphProperty = new GraphProperty();
         graphProperty.setPropertyId(1);
         graphProperty.setId(200);
+        when(graphPropertyRepository.save(graphProperty)).thenReturn(graphProperty);
         GraphProperty graphPropertySaved = graphService.addGraphProperty(graphProperty);
         graphPropertySaved.setPropertyId(2);
+        when(graphPropertyRepository.findById(graphPropertySaved.getId())).thenReturn(Optional.of(graphPropertySaved));
+        when(graphPropertyRepository.save(graphPropertySaved)).thenReturn(graphPropertySaved);
         GraphProperty graphPropertyUpdated = graphService.updateGraphProperty(graphPropertySaved, graphPropertySaved.getId());
         Assertions.assertEquals(2, graphPropertyUpdated.getPropertyId());
         Assertions.assertNotNull(graphPropertyUpdated);
@@ -125,8 +138,11 @@ public class GraphServiceImplTest {
         GraphUnit graphUnit = new GraphUnit();
         graphUnit.setPropertyId(1);
         graphUnit.setId(200);
+        when(graphUnitRepository.save(graphUnit)).thenReturn(graphUnit);
         GraphUnit graphUnitSaved = graphService.addGraphUnit(graphUnit);
         graphUnitSaved.setPropertyId(2);
+        when(graphUnitRepository.findById(graphUnitSaved.getId())).thenReturn(Optional.of(graphUnitSaved));
+        when(graphUnitRepository.save(graphUnitSaved)).thenReturn(graphUnitSaved);
         GraphUnit graphUnitUpdated = graphService.updateGraphUnit(graphUnitSaved, graphUnitSaved.getId());
         Assertions.assertEquals(2, graphUnitUpdated.getPropertyId());
         Assertions.assertNotNull(graphUnitUpdated);
@@ -137,9 +153,9 @@ public class GraphServiceImplTest {
         GraphProperty graphProperty = new GraphProperty();
         graphProperty.setPropertyId(1);
         graphProperty.setId(200);
-        GraphProperty graphPropertySaved = graphService.addGraphProperty(graphProperty);
-        graphService.deleteGraphProperty(graphPropertySaved.getId());
-        Assertions.assertThrows(GraphNotFoundException.class, () -> graphService.getGraphPropertytById(graphPropertySaved.getId()));
+        when(graphPropertyRepository.findById(graphProperty.getId())).thenReturn(Optional.of(graphProperty));
+        graphService.deleteGraphProperty(graphProperty.getId());
+        verify(graphPropertyRepository, times(1)).delete(graphProperty);
     }
 
     @Test
@@ -147,8 +163,8 @@ public class GraphServiceImplTest {
         GraphUnit graphUnit = new GraphUnit();
         graphUnit.setPropertyId(1);
         graphUnit.setId(200);
-        GraphUnit graphUnitSaved = graphService.addGraphUnit(graphUnit);
-        graphService.deleteGraphProperty(graphUnitSaved.getId());
-        Assertions.assertThrows(GraphNotFoundException.class, () -> graphService.getGraphPropertytById(graphUnitSaved.getId()));
+        when(graphUnitRepository.findById(graphUnit.getId())).thenReturn(Optional.of(graphUnit));
+        graphService.deleteGraphUnit(graphUnit.getId());
+        verify(graphUnitRepository, times(1)).delete(graphUnit);
     }
 }

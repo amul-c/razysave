@@ -9,27 +9,34 @@ import com.razysave.entity.property.Building;
 import com.razysave.entity.property.Property;
 import com.razysave.entity.property.Unit;
 import com.razysave.exception.DeviceNotFoundException;
-import com.razysave.service.devices.DeviceService;
-import com.razysave.service.property.BuildingService;
-import com.razysave.service.property.PropertyService;
-import com.razysave.service.property.UnitService;
+import com.razysave.repository.device.DeviceRepository;
+import com.razysave.repository.property.BuildingRepository;
+import com.razysave.repository.property.UnitRepository;
+
+import com.razysave.service.serviceImpl.devices.DeviceServiceImpl;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.springframework.boot.test.context.SpringBootTest;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.*;
 
 @SpringBootTest
 public class DeviceServiceImplTest {
-    @Autowired
-    private DeviceService deviceService;
-    @Autowired
-    private PropertyService propertyService;
-    @Autowired
-    private BuildingService buildingService;
-    @Autowired
-    private UnitService unitService;
+    @InjectMocks
+    private DeviceServiceImpl deviceService;
+    @Mock
+    private DeviceRepository deviceRepository;
+    @Mock
+    private UnitRepository unitRepository;
+    @Mock
+    private BuildingRepository buildingRepository;
     @Test
     public void getDeviceSuccessTest() {
         Property property = new Property();
@@ -44,11 +51,12 @@ public class DeviceServiceImplTest {
         Building building =new Building();
         building.setId(200);
         building.setName("beldon");
-        buildingService.addBuilding(building);
-        unitService.addUnit(unit);
         device.setName("Fire Alarm");
         device.setPropertyId(property.getId());
-        Device deviceSave = deviceService.addDevice(device);
+        when(deviceRepository.findByNameAndPropertyId(device.getName(),device.getPropertyId()))
+                .thenReturn(Stream.of(device).collect(Collectors.toList()));
+        when(unitRepository.findById(device.getUnitId())).thenReturn(Optional.of(unit));
+        when(buildingRepository.findById(device.getUnitId())).thenReturn(Optional.of(building));
         List<DeviceListDto> deviceListDtos = deviceService.getDevices("Fire Alarm", device.getPropertyId());
         Assertions.assertTrue(deviceListDtos.size() > 0);
     }
@@ -57,13 +65,17 @@ public class DeviceServiceImplTest {
     public void getDevicesOnAlertSuccessTest() {
         Property property = new Property();
         property.setId(200);
+        Unit unit = new Unit();
+        unit.setId(200);
         Device device = new Device();
-        device.setUnitId(1);
+        device.setUnitId(unit.getId());
         device.setId(200);
-        device.setPropertyId(200);
+        device.setPropertyId(property.getId());
         device.setStatus("alert");
-        Device deviceSave = deviceService.addDevice(device);
-        List<ActiveDeviceDto> deviceDtos = deviceService.getDevicesOnAlert(deviceSave.getPropertyId());
+        when(deviceRepository.findByStatusAndPropertyId(device.getStatus(),device.getPropertyId())).thenReturn(Stream.of(device)
+                .collect(Collectors.toList()));
+        when(unitRepository.findById(device.getUnitId())).thenReturn(Optional.of(unit));
+        List<ActiveDeviceDto> deviceDtos = deviceService.getDevicesOnAlert(device.getPropertyId());
         Assertions.assertTrue(deviceDtos.size() > 0);
     }
 
@@ -72,14 +84,15 @@ public class DeviceServiceImplTest {
         Device device = new Device();
         device.setUnitId(1);
         device.setId(2000);
-        Device deviceSaved = deviceService.addDevice(device);
-        DeviceListDto deviceGet = deviceService.getDeviceById(deviceSaved.getId());
-        Assertions.assertEquals(deviceSaved.getId(), deviceGet.getId());
+        when(deviceRepository.findById(device.getId())).thenReturn(Optional.of(device));
+        DeviceListDto deviceGet = deviceService.getDeviceById(device.getId());
+        Assertions.assertEquals(device.getId(), deviceGet.getId());
         Assertions.assertNotNull(deviceGet);
     }
 
     @Test
     public void getDeviceByIdFailerTest() {
+        when(deviceRepository.findById(200)).thenReturn(Optional.empty());
         Assertions.assertThrows(DeviceNotFoundException.class, () -> deviceService.getDeviceById(200));
     }
 
@@ -87,8 +100,11 @@ public class DeviceServiceImplTest {
     public void updateDevice() {
         Device device = new Device();
         device.setName("test1");
+        when(deviceRepository.save(device)).thenReturn(device);
         Device savedDevice = deviceService.addDevice(device);
         savedDevice.setName("Test2");
+        when(deviceRepository.findById(device.getId())).thenReturn(Optional.of(device));
+        when(deviceRepository.save(savedDevice)).thenReturn(savedDevice);
         Device updatedDevice = deviceService.updateDevice(savedDevice.getId(), savedDevice);
         Assertions.assertEquals("Test2", updatedDevice.getName());
         Assertions.assertNotNull(updatedDevice);
@@ -98,9 +114,9 @@ public class DeviceServiceImplTest {
     public void deleteBuildingTest() {
         Device device = new Device();
         device.setId(200);
-        deviceService.addDevice(device);
+        when(deviceRepository.findById(device.getId())).thenReturn(Optional.of(device));
         deviceService.deleteDeviceById(device.getId());
-        Assertions.assertThrows(DeviceNotFoundException.class, () -> deviceService.getDeviceById(device.getId()));
+        verify(deviceRepository, times(1)).deleteById(eq(device.getId()));
     }
 
     @Test
@@ -118,12 +134,11 @@ public class DeviceServiceImplTest {
         device.setUnitId(unit.getId());
         device.setConnection("offline");
         device.setPropertyId(property.getId());
-        propertyService.addProperty(property);
-        buildingService.addBuilding(building);
-        unitService.addUnit(unit);
-        deviceService.addDevice(device);
+        when(deviceRepository.findByPropertyIdAndConnection(device.getPropertyId(), device.getConnection())).thenReturn(Stream.of(device)
+                .collect(Collectors.toList()));
+        when(unitRepository.findById(device.getUnitId())).thenReturn(Optional.of(unit));
         List<OfflineDeviceDto> deviceDtos = deviceService.getOfflineDevices(property.getId());
-        Assertions.assertTrue(deviceDtos.size() > 0);
+        Assertions.assertEquals(1,deviceDtos.size());
     }
     @Test
     public void getInstallDevicesTest() {
@@ -149,12 +164,8 @@ public class DeviceServiceImplTest {
         deviceList.add(device1);
         deviceList.add(device2);
         unit.setDeviceList(deviceList);
-        propertyService.addProperty(property);
-        buildingService.addBuilding(building);
-        unitService.addUnit(unit);
-        deviceService.addDevice(device1);
-        deviceService.addDevice(device2);
-        InstalledDevices installedDevices = deviceService.getInstalledDevices(200);
-        Assertions.assertTrue(installedDevices.getDeviceCount().size() > 0);
+        when(deviceRepository.findByPropertyId(device1.getPropertyId())).thenReturn(deviceList);
+        InstalledDevices installedDevices = deviceService.getInstalledDevices(property.getId());
+        Assertions.assertEquals(2,installedDevices.getDeviceCount().size());
     }
 }

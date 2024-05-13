@@ -11,7 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.Collections;
 import java.util.List;
 
@@ -33,7 +32,9 @@ public class TenantController {
             logger.error("Exit getTenants(@PathVariable Integer unitId) with exceotion {}", e.getMessage());
             return ResponseEntity.ok(Collections.emptyList());
         }
-    } @GetMapping("/property/{propertyId}")
+    }
+
+    @GetMapping("/property/{propertyId}")
     public ResponseEntity<Object> getTenantsByProperty(@PathVariable Integer propertyId) {
         try {
             logger.info("Enter getTenantsByProperty(@PathVariable Integer propertyId) Fetching Tenant list");

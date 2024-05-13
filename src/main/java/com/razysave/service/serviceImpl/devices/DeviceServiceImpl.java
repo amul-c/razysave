@@ -40,7 +40,6 @@ public class DeviceServiceImpl implements DeviceService {
     private PropertyRepository propertyRepository;
     private ModelMapper modelMapper = new ModelMapper();
 
-
     public List<DeviceListDto> getDevices(String name,Integer propertyId) {
         logger.info("Enter of getDevices(String name) method");
         List<Device> devices = deviceRepository.findByNameAndPropertyId(name,propertyId);
@@ -80,23 +79,6 @@ public class DeviceServiceImpl implements DeviceService {
     }
 
     public Device addDevice(Device device) {
-        //device.setId(6);
-        Optional<Unit> unitOptional = unitRepository.findById(device.getUnitId());
-        if (unitOptional.isPresent()) {
-            Unit unit = unitOptional.get();
-            List<Device> devices = new ArrayList<>();
-            if(unit.getDeviceList()!=null) {
-                devices =unit.getDeviceList();
-                devices.add(device);
-
-            }
-            else
-                devices.add(device);
-            unit.setDeviceList(devices);
-            unitRepository.save(unit);
-        } else
-            throw new RuntimeException("Unit not found with UnitId: " + device.getUnitId());
-
         return deviceRepository.save(device);
     }
 

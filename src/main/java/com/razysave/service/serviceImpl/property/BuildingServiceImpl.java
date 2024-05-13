@@ -14,9 +14,7 @@ import com.razysave.service.property.UnitService;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -24,18 +22,20 @@ import java.util.stream.Collectors;
 @Service
 public class BuildingServiceImpl implements BuildingService {
     private static final Logger logger = LoggerFactory.getLogger(BuildingServiceImpl.class);
-    @Autowired
+
     private BuildingRepository buildingRepository;
-    @Autowired
     private UnitRepository unitRepository;
-    @Autowired
     private PropertyRepository propertyRepository;
-    @Autowired
     private DeviceRepository deviceRepository;
-    @Autowired
     private UnitService unitService;
     private ModelMapper modelMapper = new ModelMapper();
-
+public BuildingServiceImpl(BuildingRepository buildingRepository,PropertyRepository propertyRepository,UnitService unitService,UnitRepository unitRepository)
+{
+    this.unitRepository=unitRepository;
+    this.buildingRepository=buildingRepository;
+    this.propertyRepository=propertyRepository;
+    this.unitService=unitService;
+}
     public List<BuildingListDto> getBuildings(Integer propertyId) {
         logger.info("Enter getBuildings()  method");
         List<Building> buildings = buildingRepository.findByPropertyId(propertyId);
@@ -62,7 +62,6 @@ public class BuildingServiceImpl implements BuildingService {
     }
 
     public Building addBuilding(Building building) {
-       // building.setId(9);
         return buildingRepository.save(building);
     }
 

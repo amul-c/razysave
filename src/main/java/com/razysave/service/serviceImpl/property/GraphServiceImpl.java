@@ -9,12 +9,10 @@ import com.razysave.exception.GraphNotFoundException;
 import com.razysave.repository.property.GraphPropertyRepository;
 import com.razysave.repository.property.GraphUnitRepository;
 import com.razysave.service.property.GraphService;
-import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -25,7 +23,6 @@ public class GraphServiceImpl implements GraphService {
     GraphPropertyRepository graphRepository;
     @Autowired
     GraphUnitRepository graphUnitRepository;
-    private ModelMapper modelMapper = new ModelMapper();
     private static final Logger logger = LoggerFactory.getLogger(GraphService.class);
     public List<GraphWeekDto> getGraphPropertyByWeek(Integer propertyId) {
         logger.info("Enter  getGraphPropertyByWeek(Integer propertyId)  with propertyId {}", propertyId);

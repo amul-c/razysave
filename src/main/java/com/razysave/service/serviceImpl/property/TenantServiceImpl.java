@@ -16,13 +16,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
 public class TenantServiceImpl implements TenantService {
+
     @Autowired
     private TenantRepository tenantRepository;
     @Autowired
@@ -33,6 +33,7 @@ public class TenantServiceImpl implements TenantService {
     private BuildingRepository buildingRepository;
     private ModelMapper modelMapper = new ModelMapper();
     private static final Logger logger = LoggerFactory.getLogger(TenantServiceImpl.class);
+
     public List<TenantDto> getTenants(Integer unitId) {
         logger.info("Enter  getTenants(Integer unitId)");
         List<Tenant> tenants = tenantRepository.findByUnitId(unitId);
@@ -123,7 +124,7 @@ public class TenantServiceImpl implements TenantService {
                 if (buildingOptional.isPresent()) {
                     Building building = buildingOptional.get();
                     Integer propertyId = building.getPropertyId();
-                    Optional<Property> propertyOptional = propertyRepository.findById(propertyId);
+                    Optional<Property> propertyOptional = propertyRepository.findById(building.getPropertyId());
                     if (propertyOptional.isPresent()) {
                         Property property = propertyOptional.get();
                         property.setTenantCount(property.getTenantCount() - 1);
@@ -133,7 +134,7 @@ public class TenantServiceImpl implements TenantService {
                 unitRepository.save(unit);
             }
             tenantRepository.deleteById(id);
-            logger.info("Enter deleteTenantById(Integer id)");
+            logger.info("Exit deleteTenantById(Integer id)");
         }
         else{
             logger.info("Exit deleteTenantById(Integer id) exception thrown");
