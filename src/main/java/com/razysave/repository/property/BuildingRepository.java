@@ -1,7 +1,6 @@
 package com.razysave.repository.property;
 
 import com.razysave.entity.property.Building;
-import com.razysave.entity.property.Property;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 

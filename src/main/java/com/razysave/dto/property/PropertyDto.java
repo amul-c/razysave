@@ -1,7 +1,10 @@
 package com.razysave.dto.property;
 
+import com.razysave.entity.property.Building;
 import lombok.Getter;
 import lombok.Setter;
+import java.util.List;
+
 @Getter
 @Setter
 public class PropertyDto {
@@ -15,4 +18,5 @@ public class PropertyDto {
     private String phone;
     private String email;
     private Integer tenantCount;
+    private List<Building> building;
 }

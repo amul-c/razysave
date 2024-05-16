@@ -18,7 +18,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Collections;
 import java.util.List;
 
-
 @RestController
 @RequestMapping("/device")
 public class DeviceController {
@@ -52,6 +51,18 @@ public class DeviceController {
         }
     }
 
+    @PostMapping
+    public ResponseEntity<Object> addDevice(@RequestBody Device device) {
+        try {
+            logger.info("Enter deleteDevice(@PathVariable Integer id) with ");
+            deviceService.addDevice(device);
+            logger.info("Exit deleteDevice(@PathVariable Integer id) with ");
+            return ResponseHandler.generateResponse("deleted succesfully", HttpStatus.CREATED, device);
+        } catch (Exception e) {
+            logger.error("Exit deleteDevice(@PathVariable Integer id) with an DeviceNotFoundException exception occurred, {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+    }
 
     @PutMapping("/{id}")
     public ResponseEntity<Object> updateDevice(@PathVariable Integer id, @RequestBody Device device) {

@@ -45,7 +45,7 @@ public class PropertyController {
         }
     }
 
-    @PostMapping("/")
+    @PostMapping
     public ResponseEntity<Object> addProperties(@RequestBody Property property) {
         Property propertySaved=propertyService.addProperty(property);
         return ResponseEntity.ok(propertySaved);

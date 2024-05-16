@@ -25,10 +25,5 @@ public class Building {
         return 0;
     }
 
-    public Integer getDeviceCount() {
-        if (devices != null)
-        return devices.size();
-        return 0;
-    }
 
 }

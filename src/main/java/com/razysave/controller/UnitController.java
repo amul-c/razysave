@@ -3,6 +3,7 @@ package com.razysave.controller;
 import com.razysave.dto.unit.UnitInfoDto;
 import com.razysave.dto.unit.UnitListDto;
 import com.razysave.entity.property.Unit;
+import com.razysave.exception.BuildingNotFoundException;
 import com.razysave.exception.UnitNotFoundException;
 import com.razysave.service.property.UnitService;
 import org.slf4j.Logger;
@@ -60,12 +61,17 @@ public class UnitController {
         }
     }
 
-    @PostMapping("/")
+    @PostMapping
     public ResponseEntity<Unit> addUnits(@RequestBody Unit unit) {
-        logger.info("Enter addUnits(@RequestBody Unit unit)");
-        unitService.addUnit(unit);
-        logger.info("Exit addUnits(@RequestBody Unit unit)");
-        return ResponseEntity.ok(unit);
+        try {
+            logger.info("Enter addUnits(@RequestBody Unit unit)");
+            unitService.addUnit(unit);
+            logger.info("Exit addUnits(@RequestBody Unit unit)");
+            return ResponseEntity.ok(unit);
+        } catch (BuildingNotFoundException e) {
+            logger.error("Exit addUnits(@RequestBody Unit unit) {}", e.getMessage());
+            return ResponseEntity.unprocessableEntity().body(unit);
+        }
     }
 
     @PutMapping("/{id}")

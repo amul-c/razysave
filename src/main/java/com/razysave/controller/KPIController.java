@@ -49,7 +49,7 @@ public class KPIController {
         }
     }
 
-    @PostMapping("/")
+    @PostMapping
     public ResponseEntity<Object> addKPI(@RequestBody KPI kpi) {
         logger.info("Enter getKPIById(@PathVariable Integer id)");
         kpiService.addKPI(kpi);

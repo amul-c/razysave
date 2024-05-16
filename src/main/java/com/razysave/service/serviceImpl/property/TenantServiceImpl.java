@@ -6,11 +6,13 @@ import com.razysave.entity.property.Property;
 import com.razysave.entity.property.Unit;
 import com.razysave.entity.tenant.Tenant;
 import com.razysave.exception.TenantNotFoundException;
+import com.razysave.exception.UnitNotFoundException;
 import com.razysave.repository.property.BuildingRepository;
 import com.razysave.repository.property.PropertyRepository;
 import com.razysave.repository.property.UnitRepository;
 import com.razysave.repository.tenant.TenantRepository;
 import com.razysave.service.property.TenantService;
+import com.razysave.service.property.UnitService;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,6 +33,8 @@ public class TenantServiceImpl implements TenantService {
     private PropertyRepository propertyRepository;
     @Autowired
     private BuildingRepository buildingRepository;
+    @Autowired
+    private UnitService unitService;
     private ModelMapper modelMapper = new ModelMapper();
     private static final Logger logger = LoggerFactory.getLogger(TenantServiceImpl.class);
 
@@ -75,8 +79,25 @@ public class TenantServiceImpl implements TenantService {
     }
 
     public Tenant addTenant(Tenant tenant) {
-        logger.info("Enter and Exit addTenant(Tenant tenant)");
-        return tenantRepository.save(tenant);
+        logger.info("Enter addTenant(Tenant tenant)");
+        Optional<Unit> unitOptional = unitRepository.findById(tenant.getUnitId());
+        if (unitOptional.isPresent()) {
+            Unit unit = unitOptional.get();
+            unit.setTenant(tenant);
+            unit.setOccupied(true);
+            unitService.updateUnit(unit.getId(), unit);
+            Property property = propertyRepository.findById(tenant.getPropertyId()).orElse(null);
+            if (property.getTenantCount() != null)
+                property.setTenantCount(property.getTenantCount() + 1);
+            else
+                property.setTenantCount(1);
+            propertyRepository.save(property);
+            logger.info("Exit addTenant(Tenant tenant) exception thrown");
+            return tenantRepository.save(tenant);
+        } else {
+            logger.info("Exit addTenant(Tenant tenant) exception thrown");
+            throw new UnitNotFoundException("Unit not found with id:" + tenant.getUnitId());
+        }
     }
 
     public Tenant updateTenant(Integer id, Tenant updatedtenant) {
@@ -84,7 +105,6 @@ public class TenantServiceImpl implements TenantService {
         Optional<Tenant> exisitingTenantOptinal = tenantRepository.findById(id);
         if (exisitingTenantOptinal.isPresent()) {
             Tenant exisitingTenant = exisitingTenantOptinal.get();
-
             if (updatedtenant.getName() != null) {
                 exisitingTenant.setName(updatedtenant.getName());
             }
@@ -100,11 +120,15 @@ public class TenantServiceImpl implements TenantService {
             if (updatedtenant.getPhone() != null) {
                 exisitingTenant.setPhone(updatedtenant.getPhone());
             }
+            Optional<Unit> unitOptional = unitRepository.findById(exisitingTenant.getUnitId());
+            Unit unit = unitOptional.get();
+            unit.setTenant(exisitingTenant);
+            unitService.updateUnit(unit.getId(), unit);
             logger.info("Exit updateTenant(Integer id, Tenant updatedtenant)");
             return tenantRepository.save(exisitingTenant);
         } else {
             logger.info("Exit updateTenant(Integer id, Tenant updatedtenant)");
-            throw new RuntimeException("Tenant not found with id : " + updatedtenant.getId());
+            throw new TenantNotFoundException("Tenant not found with id : " + updatedtenant.getId());
         }
     }
 
@@ -117,7 +141,7 @@ public class TenantServiceImpl implements TenantService {
             Optional<Unit> unitOptional = unitRepository.findById(unitId);
             if (unitOptional.isPresent()) {
                 Unit unit = unitOptional.get();
-                unit.setTenant(null);
+                unit.setTenant(new Tenant());
                 unit.setOccupied(false);
                 Integer buildingId = unit.getBuildingId();
                 Optional<Building> buildingOptional = buildingRepository.findById(buildingId);
@@ -131,7 +155,7 @@ public class TenantServiceImpl implements TenantService {
                         propertyRepository.save(property);
                     }
                 }
-                unitRepository.save(unit);
+                unitService.updateUnit(unit.getId(), unit);
             }
             tenantRepository.deleteById(id);
             logger.info("Exit deleteTenantById(Integer id)");

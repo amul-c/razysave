@@ -20,5 +20,5 @@ public class Unit {
     private String installedDate;
     private Tenant tenant;
     private boolean occupied;
-private Integer propertyId;
+    private Integer propertyId;
 }
