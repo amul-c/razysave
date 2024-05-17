@@ -96,7 +96,7 @@ public class UnitController {
             return ResponseEntity.noContent().build();
         } catch (UnitNotFoundException e) {
             logger.error("Exit deleteUnit(@PathVariable Integer id) an UnitNotFoundException exception occurred, {}", e.getMessage());
-            return ResponseEntity.ok().build();
+            return ResponseEntity.notFound().build();
         }
     }
 }

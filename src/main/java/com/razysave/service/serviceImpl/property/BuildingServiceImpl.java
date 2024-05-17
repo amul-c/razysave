@@ -147,7 +147,10 @@ public BuildingServiceImpl(BuildingRepository buildingRepository,PropertyReposit
     private BuildingListDto mapToDto(Building building) {
         BuildingListDto dto = modelMapper.map(building, BuildingListDto.class);
         dto.setUnitCount(building.getUnitCount());
+        if(building.getDevices()!=null)
         dto.setDeviceCount(building.getDevices().size());
+        else
+            dto.setDeviceCount(0);
         return dto;
     }
 }

@@ -1,4 +1,4 @@
-package com.razysave.serviceTest;
+package com.razysave.servicetest;
 
 import com.razysave.dto.BuildingListDto;
 import com.razysave.entity.property.Building;
@@ -10,23 +10,17 @@ import com.razysave.repository.property.PropertyRepository;
 import com.razysave.repository.property.UnitRepository;
 import com.razysave.service.property.UnitService;
 import com.razysave.service.serviceImpl.property.BuildingServiceImpl;
-import com.razysave.service.serviceImpl.property.PropertyServiceImpl;
-import com.razysave.service.serviceImpl.property.UnitServiceImpl;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.boot.test.context.SpringBootTest;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
@@ -43,13 +37,16 @@ public class BuildingServiceImplTest {
 
     @Test
     public void getBuildingsSuccessTest() {
-        Building building = new Building();
-        building.setPropertyId(200);
-        when(buildingRepository.findByPropertyId(building.getPropertyId()))
-                .thenReturn(Stream.of(building).collect(Collectors.toList()));
-        List<BuildingListDto> buildingList = buildingService.getBuildings(building.getPropertyId());
-        Assertions.assertTrue(buildingList.size() > 0);
-    }
+        Integer propertyId = 1;
+        List<Building> buildings = new ArrayList<>();
+        Building building=new Building();
+        building.setPropertyId(propertyId);
+        buildings.add(building);
+        when(buildingRepository.findByPropertyId(propertyId)).thenReturn(buildings);
+        List<BuildingListDto> result = buildingService.getBuildings(propertyId);
+        assertNotNull(result);
+        assertEquals(buildings.size(), result.size());
+        verify(buildingRepository, times(1)).findByPropertyId(propertyId); }
 
     @Test
     public void updateBuilding() {
@@ -65,7 +62,12 @@ public class BuildingServiceImplTest {
         Assertions.assertEquals("Test2", updateBuilding.getName());
         Assertions.assertNotNull(updateBuilding);
     }
-
+    @Test
+    public void updateBuildingFailerTest() {
+        Building building=new Building();
+        when(buildingRepository.findById(200)).thenReturn(Optional.empty());
+        Assertions.assertThrows(BuildingNotFoundException.class, () -> buildingService.updateBuilding(200,building));
+    }
     @Test
     public void getBuildingyByIdSuccessTest() {
         Building building = new Building();

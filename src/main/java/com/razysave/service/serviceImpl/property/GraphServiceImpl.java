@@ -49,7 +49,7 @@ public class GraphServiceImpl implements GraphService {
     }
 
 
-    public List<GraphMonthDto> getGraphPropertyhByMonth(Integer propertyId) {
+    public List<GraphMonthDto> getGraphPropertyByMonth(Integer propertyId) {
         logger.info("Enter getGraphPropertyhByMonth(Integer propertyId) with propertyId {}", propertyId);
         GraphProperty graph = graphRepository.findByPropertyId(propertyId);
         if(graph!=null) {

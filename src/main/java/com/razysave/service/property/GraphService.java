@@ -14,7 +14,7 @@ import java.util.List;
 public interface GraphService {
     public List<GraphWeekDto> getGraphPropertyByWeek(Integer propertyId);
     public List<GraphWeekDto> getGraphUnitByWeek(Integer propertyId);
-    public List<GraphMonthDto> getGraphPropertyhByMonth(Integer propertyId) ;
+    public List<GraphMonthDto> getGraphPropertyByMonth(Integer propertyId) ;
     public List<GraphMonthDto> getGraphUnitByMonth(Integer propertyId);
     public List<GraphYearDto> getGraphByPropertyYear(Integer propertyId);
     public List<GraphYearDto> getGraphByUnitYear(Integer propertyId);

@@ -178,6 +178,7 @@ public class DeviceServiceImpl implements DeviceService {
         } else
             throw new DeviceNotFoundException("Device not found with id: " + id);
     }
+
     public List<OfflineDeviceDto> getOfflineDevices(Integer propertyId)
     {
         logger.info("Enter  getOfflineDevices(Integer propertyId) method");
