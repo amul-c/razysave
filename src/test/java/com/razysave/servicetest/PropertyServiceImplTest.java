@@ -1,4 +1,4 @@
-package com.razysave.serviceTest;
+package com.razysave.servicetest;
 
 import com.razysave.dto.property.PropertyDto;
 import com.razysave.entity.property.Property;
@@ -10,7 +10,6 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.springframework.boot.test.context.SpringBootTest;
-
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;

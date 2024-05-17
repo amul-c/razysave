@@ -15,12 +15,14 @@ import com.razysave.repository.property.BuildingRepository;
 import com.razysave.repository.property.PropertyRepository;
 import com.razysave.repository.property.UnitRepository;
 import com.razysave.service.devices.DeviceService;
+import com.razysave.service.property.BuildingService;
+import com.razysave.service.property.UnitService;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -34,6 +36,11 @@ public class DeviceServiceImpl implements DeviceService {
     private DeviceRepository deviceRepository;
     @Autowired
     private UnitRepository unitRepository;
+    @Autowired
+    private UnitService unitService;
+    @Lazy
+    @Autowired
+    private BuildingService buildingService;
     @Autowired
     private BuildingRepository buildingRepository;
     @Autowired
@@ -79,7 +86,25 @@ public class DeviceServiceImpl implements DeviceService {
     }
 
     public Device addDevice(Device device) {
-        return deviceRepository.save(device);
+        Optional<Unit> unitOptional = unitRepository.findById(device.getUnitId());
+        if (unitOptional.isPresent()) {
+            Unit unit = unitOptional.get();
+            unit.getDeviceList().add(device);
+            unitService.updateUnit(unit.getId(), unit);
+            Optional<Building> buildingOptional = buildingRepository.findById(unit.getBuildingId());
+            if (buildingOptional.isPresent()) {
+                Building building = buildingOptional.get();
+                building.getDevices().add(device);
+                buildingService.updateBuilding(building.getId(),building);
+                return deviceRepository.save(device);
+            } else {
+                logger.info("End of addDevice(Device device) method with exception");
+                throw new BuildingNotFoundException("building not found with id" + unit.getBuildingId());
+            }
+        } else {
+            logger.info("End of addDevice(Device device) method with exception");
+            throw new UnitNotFoundException("unit not found with id" + device.getUnitId());
+        }
     }
 
     public Device updateDevice(Integer deviceId, Device updatedDevice) {
@@ -87,7 +112,16 @@ public class DeviceServiceImpl implements DeviceService {
         Optional<Device> existingDeviceOptional = deviceRepository.findById(deviceId);
         if (existingDeviceOptional.isPresent()) {
             Device existingDevice = existingDeviceOptional.get();
-
+            Optional<Unit> unitOptional = unitRepository.findById(existingDevice.getUnitId());
+            Unit unit = unitOptional.get();
+            List<Device> newList1 = new ArrayList<>(unit.getDeviceList());
+            newList1.removeIf(device -> device.getId() == deviceId);
+            unit.setDeviceList(newList1);
+            Optional<Building> buildingOptional = buildingRepository.findById(unit.getBuildingId());
+            Building building = buildingOptional.get();
+            List<Device> newList2 = new ArrayList<>(building.getDevices());
+            newList2.removeIf(device -> device.getId() == deviceId);
+            building.setDevices(newList2);
             if (updatedDevice.getUnitId() != null) {
                 existingDevice.setInstalledDate(updatedDevice.getInstalledDate());
             }
@@ -112,6 +146,11 @@ public class DeviceServiceImpl implements DeviceService {
             if (updatedDevice.getOfflineSince() != null) {
                 existingDevice.setOfflineSince(updatedDevice.getOfflineSince());
             }
+            unit.getDeviceList().add(existingDevice);
+
+            building.getDevices().add(existingDevice);
+            buildingService.updateBuilding(building.getId(),building);
+            unitService.updateUnit(unit.getId(), unit);
             logger.info("End of updateDevice(String deviceId,DeviceListDto updatedDevice) method");
             return deviceRepository.save(existingDevice);
         } else {
@@ -125,6 +164,16 @@ public class DeviceServiceImpl implements DeviceService {
         Optional<Device> deviceOptional = deviceRepository.findById(id);
         if (deviceOptional.isPresent()) {
             Device device = deviceOptional.get();
+            Unit unit = unitRepository.findById(device.getUnitId()).orElse(null);
+            if (unit != null) {
+                unit.getDeviceList().remove(device);
+                unitService.updateUnit(unit.getId(), unit);
+                Building building = buildingRepository.findById(unit.getBuildingId()).orElse(null);
+                if (building != null) {
+                    building.getDevices().remove(device);
+                    buildingService.updateBuilding(building.getId(),building);
+                }
+            }
             deviceRepository.deleteById(id);
         } else
             throw new DeviceNotFoundException("Device not found with id: " + id);

@@ -2,8 +2,6 @@ package com.razysave.dto.device;
 
 import lombok.Getter;
 import lombok.Setter;
-
-import java.util.Date;
 import java.util.Map;
 
 @Getter

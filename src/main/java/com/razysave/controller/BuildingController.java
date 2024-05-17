@@ -3,7 +3,7 @@ package com.razysave.controller;
 import com.razysave.dto.BuildingListDto;
 import com.razysave.entity.property.Building;
 import com.razysave.exception.BuildingNotFoundException;
-import com.razysave.response.ResponseHandler;
+import com.razysave.exception.PropertyNotFoundException;
 import com.razysave.service.property.BuildingService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,12 +47,17 @@ public class BuildingController {
         }
     }
 
-    @PostMapping("/")
-    public ResponseEntity<Object> addBuilding(@RequestBody Building building) {
-        logger.info("Enter addBuilding(@RequestBody Building building)");
-        buildingService.addBuilding(building);
-        logger.info("Exit addBuilding(@RequestBody Building building)");
-        return ResponseHandler.generateResponse("Added succesfully", HttpStatus.CREATED, building);
+    @PostMapping
+    public ResponseEntity<Building> addBuilding(@RequestBody Building building) {
+        try {
+            logger.info("Enter addBuilding(@RequestBody Building building)");
+            buildingService.addBuilding(building);
+            logger.info("Exit addBuilding(@RequestBody Building building)");
+            return ResponseEntity.ok(building);
+        } catch (PropertyNotFoundException e) {
+            logger.error(" Exit addBuilding with Exception {}", e.getMessage());
+            return ResponseEntity.unprocessableEntity().body(building);
+        }
     }
 
     @PutMapping("/{id}")

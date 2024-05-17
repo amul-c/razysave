@@ -6,7 +6,6 @@ import com.razysave.dto.device.InstalledDevices;
 import com.razysave.dto.device.OfflineDeviceDto;
 import com.razysave.entity.devices.Device;
 import com.razysave.exception.DeviceNotFoundException;
-import com.razysave.response.ResponseHandler;
 import com.razysave.service.devices.DeviceService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,7 +16,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Collections;
 import java.util.List;
-
 
 @RestController
 @RequestMapping("/device")
@@ -52,14 +50,26 @@ public class DeviceController {
         }
     }
 
+    @PostMapping
+    public ResponseEntity<Object> addDevice(@RequestBody Device device) {
+        try {
+            logger.info("Enter deleteDevice(@PathVariable Integer id) with ");
+            deviceService.addDevice(device);
+            logger.info("Exit deleteDevice(@PathVariable Integer id) with ");
+            return ResponseEntity.ok(device);
+        } catch (Exception e) {
+            logger.error("Exit deleteDevice(@PathVariable Integer id) with an DeviceNotFoundException exception occurred, {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+    }
 
     @PutMapping("/{id}")
     public ResponseEntity<Object> updateDevice(@PathVariable Integer id, @RequestBody Device device) {
         try {
             logger.info("Enter updateDevice(@PathVariable Integer id, @RequestBody Device device) with {}", id);
-            deviceService.updateDevice(id, device);
+            Device updatedDevice=deviceService.updateDevice(id, device);
             logger.info("Exit updateDevice(@PathVariable Integer id, @RequestBody Device device)");
-            return ResponseHandler.generateResponse("updated succesfully", HttpStatus.CREATED, device);
+            return ResponseEntity.ok(updatedDevice);
         } catch (DeviceNotFoundException e) {
             logger.error("Exit updateDevice(@PathVariable Integer id, @RequestBody Device device) an DeviceNotFoundException exception occurred, {}", e.getMessage());
             return ResponseEntity.noContent().build();
@@ -72,7 +82,7 @@ public class DeviceController {
             logger.info("Enter deleteDevice(@PathVariable Integer id) with {}", id);
             deviceService.deleteDeviceById(id);
             logger.info("Exit deleteDevice(@PathVariable Integer id) with {}", id);
-            return ResponseHandler.generateResponse("deleted succesfully", HttpStatus.CREATED, id);
+            return ResponseEntity.ok().build();
         } catch (DeviceNotFoundException e) {
             logger.error("Exit deleteDevice(@PathVariable Integer id) with an DeviceNotFoundException exception occurred, {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();

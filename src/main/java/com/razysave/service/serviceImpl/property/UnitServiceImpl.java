@@ -5,19 +5,25 @@ import com.razysave.dto.unit.UnitInfoDto;
 import com.razysave.dto.unit.UnitListDto;
 import com.razysave.entity.devices.Device;
 import com.razysave.entity.property.Building;
+import com.razysave.entity.property.Property;
 import com.razysave.entity.property.Unit;
 import com.razysave.entity.tenant.Tenant;
+import com.razysave.exception.BuildingNotFoundException;
 import com.razysave.exception.UnitNotFoundException;
 import com.razysave.repository.property.BuildingRepository;
+import com.razysave.repository.property.PropertyRepository;
 import com.razysave.repository.property.UnitRepository;
 import com.razysave.service.devices.DeviceService;
+import com.razysave.service.property.BuildingService;
 import com.razysave.service.property.TenantService;
 import com.razysave.service.property.UnitService;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -28,6 +34,11 @@ public class UnitServiceImpl implements UnitService {
     private UnitRepository unitRepository;
     @Autowired
     private BuildingRepository buildingRepository;
+    @Lazy
+    @Autowired
+    private BuildingService buildingService;
+    @Autowired
+    private PropertyRepository propertyRepository;
     @Autowired
     private DeviceService deviceService;
     @Autowired
@@ -86,7 +97,28 @@ public class UnitServiceImpl implements UnitService {
 
     public Unit addUnit(Unit unit) {
         logger.info("Enter and Exit addUnit(Unit unit)");
-        return unitRepository.save(unit);
+        Optional<Building> buildingOptional = buildingRepository.findById(unit.getBuildingId());
+        if (buildingOptional.isPresent()) {
+            Building building = buildingOptional.get();
+            if (building.getUnits() != null)
+                building.getUnits().add(unit);
+            else {
+                List<Unit> units = new ArrayList<>();
+                units.add(unit);
+                building.setUnits(units);
+            }
+            Property property = propertyRepository.findById(unit.getPropertyId()).orElse(null);
+            if (property.getUnitCount() != null)
+                property.setUnitCount(property.getUnitCount() + 1);
+            else
+                property.setUnitCount(1);
+            propertyRepository.save(property);
+            buildingService.updateBuilding(building.getId(),building);
+            return unitRepository.save(unit);
+        } else {
+            logger.info("Exit addUnit(Unit unit) with exception");
+            throw new BuildingNotFoundException("building not found with id" + unit.getBuildingId());
+        }
     }
 
     public Unit updateUnit(Integer id, Unit updatedUnit) {
@@ -94,23 +126,32 @@ public class UnitServiceImpl implements UnitService {
         Optional<Unit> exisitingUnitOptional = unitRepository.findById(id);
         if (exisitingUnitOptional.isPresent()) {
             Unit existingUnit = exisitingUnitOptional.get();
+            Optional<Building> buildingOptional = buildingRepository.findById(existingUnit.getBuildingId());
+            Building building = buildingOptional.get();
+            List<Unit> newList = new ArrayList<>(building.getUnits());
+            newList.removeIf(unit -> unit.getId() == id);
+            building.setUnits(newList);
             if (updatedUnit.getName() != null) {
                 existingUnit.setName(updatedUnit.getName());
             }
             if (updatedUnit.getTenant() != null) {
                 existingUnit.setTenant(updatedUnit.getTenant());
                 existingUnit.setOccupied(true);
+                if (updatedUnit.getTenant().getName() == null) {
+                    existingUnit.setTenant(null);
+                    existingUnit.setOccupied(false);
+                }
             }
             if (updatedUnit.getDeviceList() != null) {
-                if (existingUnit.getDeviceList() != null)
-                    existingUnit.getDeviceList().addAll(updatedUnit.getDeviceList());
-                else existingUnit.setDeviceList(updatedUnit.getDeviceList());
+                existingUnit.setDeviceList(updatedUnit.getDeviceList());
             }
+            building.getUnits().add(existingUnit);
+            buildingService.updateBuilding(building.getId(),building);
             logger.info("Exit updateUnit(Integer id, Unit updatedUnit)");
             return unitRepository.save(existingUnit);
         } else {
             logger.info("Exit updateUnit(Integer id, Unit updatedUnit) exception thrown");
-            throw new RuntimeException("Unit not found with Id : " + updatedUnit.getId());
+            throw new UnitNotFoundException("Unit not found with Id : " + updatedUnit.getId());
         }
     }
 
@@ -127,8 +168,11 @@ public class UnitServiceImpl implements UnitService {
                         .filter(b -> !b.getId().equals(unit.getId()))
                         .collect(Collectors.toList());
                 building.setUnits(units);
-                buildingRepository.save(building);
+                buildingService.updateBuilding(building.getId(),building);
             }
+            Property property = propertyRepository.findById(unit.getPropertyId()).orElse(null);
+            property.setUnitCount(property.getUnitCount() - 1);
+            propertyRepository.save(property);
            Tenant tenant = unit.getTenant();
             if (tenant != null) {
                 tenantService.deleteTenantById(tenant.getId());

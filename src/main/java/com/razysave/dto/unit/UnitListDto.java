@@ -13,5 +13,5 @@ public class UnitListDto {
     private String name;
     private List<DeviceListDto> deviceList;
     private String tenantName;
-    private String installDate;
+    private String installedDate;
 }

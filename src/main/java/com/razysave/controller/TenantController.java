@@ -4,6 +4,7 @@ import com.razysave.dto.tenant.TenantDto;
 import com.razysave.entity.tenant.Tenant;
 import com.razysave.exception.BuildingNotFoundException;
 import com.razysave.exception.TenantNotFoundException;
+import com.razysave.exception.UnitNotFoundException;
 import com.razysave.service.property.TenantService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,18 +55,23 @@ public class TenantController {
             Tenant tenant = tenantService.getTenantById(id);
             logger.info("Exit getTenantByName(@PathVariable Integer id)  Fetching Tenant with id {}", id);
             return ResponseEntity.ok(tenant);
-        } catch (BuildingNotFoundException e) {
+        } catch (TenantNotFoundException e) {
             logger.error("Exit getTenantByName(@PathVariable Integer id) {}", e.getMessage());
             return ResponseEntity.ok(Collections.emptyList());
         }
     }
 
-    @PostMapping("/")
+    @PostMapping
     public ResponseEntity<Object> addTenant(@RequestBody Tenant tenant) {
-        logger.info("Enter addTenant(@RequestBody Tenant tenant)");
-        tenantService.addTenant(tenant);
-        logger.info("Exit addTenant(@RequestBody Tenant tenant)");
-        return ResponseEntity.ok(tenant);
+        try {
+            logger.info("Enter addTenant(@RequestBody Tenant tenant)");
+            tenantService.addTenant(tenant);
+            logger.info("Exit addTenant(@RequestBody Tenant tenant)");
+            return ResponseEntity.ok(tenant);
+        } catch (UnitNotFoundException e) {
+            logger.error(" Exit addTenant(@RequestBody Tenant tenant) with Exception {}", e.getMessage());
+            return ResponseEntity.unprocessableEntity().body(tenant);
+        }
     }
 
     @PutMapping("/{id}")

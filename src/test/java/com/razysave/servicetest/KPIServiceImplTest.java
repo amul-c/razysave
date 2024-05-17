@@ -1,4 +1,4 @@
-package com.razysave.serviceTest;
+package com.razysave.servicetest;
 
 import com.razysave.dto.kpi.KPIDto;
 import com.razysave.entity.kpi.KPI;

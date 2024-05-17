@@ -39,7 +39,7 @@ public class GraphController {
     public ResponseEntity<List<GraphMonthDto>> getGraphPropertyByMonth(@PathVariable Integer propertyId) {
         try {
             logger.info("Enter getGraphPropertyByMonth(@PathVariable Integer propertyId) with propertyId {}", propertyId);
-            List<GraphMonthDto> graphMonthDto = graphService.getGraphPropertyhByMonth(propertyId);
+            List<GraphMonthDto> graphMonthDto = graphService.getGraphPropertyByMonth(propertyId);
             logger.info("Exit getGraphPropertyByMonth(@PathVariable Integer propertyId) with propertyId {}", propertyId);
             return ResponseEntity.ok(graphMonthDto);
         } catch (GraphNotFoundException e) {
@@ -78,7 +78,7 @@ public class GraphController {
     public ResponseEntity<List<GraphMonthDto>> getGraphUnitByMonth(@PathVariable Integer unitId) {
         try {
             logger.info("Enter getGraphUnitByMonth(@PathVariable Integer unitId) with unitId {}", unitId);
-            List<GraphMonthDto> graphMonthDto = graphService.getGraphPropertyhByMonth(unitId);
+            List<GraphMonthDto> graphMonthDto = graphService.getGraphPropertyByMonth(unitId);
             logger.info("Exit getGraphUnitByMonth(@PathVariable Integer unitId) with unitId {}", unitId);
             return ResponseEntity.ok(graphMonthDto);
         } catch (GraphNotFoundException e) {

@@ -1,4 +1,4 @@
-package com.razysave.serviceTest;
+package com.razysave.servicetest;
 
 import com.razysave.dto.property.GraphMonthDto;
 import com.razysave.dto.property.GraphWeekDto;
@@ -52,7 +52,7 @@ public class GraphServiceImplTest {
         graphProperty.setPropertyId(200);
         graphProperty.setId(200);
         when(graphPropertyRepository.findByPropertyId(graphProperty.getPropertyId())).thenReturn(graphProperty);
-        List<GraphMonthDto> graphMonthDtos = graphService.getGraphPropertyhByMonth(graphProperty.getId());
+        List<GraphMonthDto> graphMonthDtos = graphService.getGraphPropertyByMonth(graphProperty.getId());
         Assertions.assertTrue(graphMonthDtos.size() > 0);
     }
 

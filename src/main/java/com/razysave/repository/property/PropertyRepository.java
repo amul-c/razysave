@@ -7,7 +7,4 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface PropertyRepository extends MongoRepository<Property, Integer> {
     public Property findByName(String name);
-   // public void deleteById(Integer id);
-
-
 }

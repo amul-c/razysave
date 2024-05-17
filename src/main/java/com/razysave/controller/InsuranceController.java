@@ -76,7 +76,7 @@ public class InsuranceController {
             logger.info("Enter deleteInsuranceIndex(@PathVariable Integer id) Deleting insuranceIndex with {}",id);
             insuranceIndexService.deleteInsuranceIndexById(id);
             logger.info("Exit deleteInsuranceIndex(@PathVariable Integer id) Deleted insuranceIndex with {}",id);
-            return ResponseHandler.generateResponse("deleted succesfully", HttpStatus.CREATED, id);
+            return ResponseEntity.ok().build();
         } catch (InsuranceIndexNotFoundException e) {
             logger.error("Exit deleteInsuranceIndex(@PathVariable Integer id) an InsuranceIndexNotFoundException exception occurred, {}", e.getMessage());
             return ResponseEntity.noContent().build();

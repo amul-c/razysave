@@ -5,6 +5,7 @@ import com.razysave.entity.property.Building;
 import com.razysave.entity.property.Property;
 import com.razysave.entity.property.Unit;
 import com.razysave.exception.BuildingNotFoundException;
+import com.razysave.exception.PropertyNotFoundException;
 import com.razysave.repository.device.DeviceRepository;
 import com.razysave.repository.property.BuildingRepository;
 import com.razysave.repository.property.PropertyRepository;
@@ -15,6 +16,7 @@ import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -62,7 +64,26 @@ public BuildingServiceImpl(BuildingRepository buildingRepository,PropertyReposit
     }
 
     public Building addBuilding(Building building) {
-        return buildingRepository.save(building);
+        Optional<Property> propertyOptional = propertyRepository.findById(building.getPropertyId());
+        if (propertyOptional.isPresent()) {
+            Property property = propertyOptional.get();
+            List<Building> buildings = new ArrayList<>();
+            if (property.getBuilding() != null) {
+                buildings.addAll(property.getBuilding());
+                buildings.add(building);
+                property.setBuildingCount(property.getBuildingCount() + 1);
+            } else {
+                buildings.add(building);
+                property.setBuildingCount(1);
+            }
+            property.setBuilding(buildings);
+
+            propertyRepository.save(property);
+            return buildingRepository.save(building);
+        } else {
+            logger.info("End of addBuilding(Building building) method with Exception");
+            throw new PropertyNotFoundException("property with this id is not present" + building.getPropertyId());
+        }
     }
 
     public Building updateBuilding(Integer id, Building updatedBuilding) {
@@ -70,14 +91,22 @@ public BuildingServiceImpl(BuildingRepository buildingRepository,PropertyReposit
         Optional<Building> exisitingBuildingOptional = buildingRepository.findById(id);
         if (exisitingBuildingOptional.isPresent()) {
             Building exisitingBuilding = exisitingBuildingOptional.get();
+            Optional<Property> propertyOptional = propertyRepository.findById(exisitingBuilding.getPropertyId());
+            Property property = propertyOptional.get();
+            List<Building> newList = new ArrayList<>(property.getBuilding());
+            newList.removeIf(building -> building.getId() == id);
+            property.setBuilding(newList);
             if (updatedBuilding.getName() != null) {
                 exisitingBuilding.setName(updatedBuilding.getName());
             }
             if (updatedBuilding.getUnits() != null) {
-                if (exisitingBuilding.getUnits() != null)
-                    exisitingBuilding.getUnits().addAll(updatedBuilding.getUnits());
-                else exisitingBuilding.setUnits(updatedBuilding.getUnits());
+                    exisitingBuilding.setUnits(updatedBuilding.getUnits());
             }
+            if (updatedBuilding.getDevices() != null) {
+                    exisitingBuilding.setDevices(updatedBuilding.getDevices());
+            }
+            property.getBuilding().add(exisitingBuilding);
+            propertyRepository.save(property);
             logger.info("End of updateBuilding(Integer id, Building updatedBuilding) method");
             return buildingRepository.save(exisitingBuilding);
         } else {
@@ -96,7 +125,6 @@ public BuildingServiceImpl(BuildingRepository buildingRepository,PropertyReposit
             Optional<Property> optionalProperty = propertyRepository.findById(propertyId);
             if (optionalProperty.isPresent()) {
                 Property property = optionalProperty.get();
-                property.setUnitCount(1);
                 property.setUnitCount(property.getUnitCount() - building.getUnitCount());
                 List<Building> updatedBuildings = property.getBuilding().stream()
                         .filter(b -> !b.getId().equals(building.getId()))
@@ -119,7 +147,10 @@ public BuildingServiceImpl(BuildingRepository buildingRepository,PropertyReposit
     private BuildingListDto mapToDto(Building building) {
         BuildingListDto dto = modelMapper.map(building, BuildingListDto.class);
         dto.setUnitCount(building.getUnitCount());
-        dto.setDeviceCount(building.getDeviceCount());
+        if(building.getDevices()!=null)
+        dto.setDeviceCount(building.getDevices().size());
+        else
+            dto.setDeviceCount(0);
         return dto;
     }
 }

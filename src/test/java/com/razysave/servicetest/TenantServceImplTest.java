@@ -1,4 +1,4 @@
-package com.razysave.serviceTest;
+package com.razysave.servicetest;
 
 import com.razysave.dto.tenant.TenantDto;
 import com.razysave.entity.property.Building;
@@ -10,6 +10,7 @@ import com.razysave.repository.property.BuildingRepository;
 import com.razysave.repository.property.PropertyRepository;
 import com.razysave.repository.property.UnitRepository;
 import com.razysave.repository.tenant.TenantRepository;
+import com.razysave.service.property.UnitService;
 import com.razysave.service.serviceImpl.property.TenantServiceImpl;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -28,6 +29,9 @@ import static org.mockito.Mockito.*;
 public class TenantServceImplTest {
     @InjectMocks
     TenantServiceImpl tenantService;
+
+    @Mock
+    private UnitService unitService;
     @Mock
     private TenantRepository tenantRepository;
     @Mock
@@ -62,6 +66,11 @@ public class TenantServceImplTest {
         Assertions.assertTrue(tenantDtoList.size() > 0);
     }
     @Test
+    public void getTenantByPropertyIdFailerTest() {
+        when(tenantRepository.findByPropertyId(200)).thenReturn(Collections.emptyList());
+        Assertions.assertThrows(TenantNotFoundException.class, () -> tenantService.getTenantsByPropertyId(200));
+    }
+    @Test
     public void getTenantByIdSuccessTest() {
         Tenant tenant = new Tenant();
         tenant.setId(200);
@@ -77,18 +86,26 @@ public class TenantServceImplTest {
     }
     @Test
     public void updateTenant() {
-        Tenant tenant = new Tenant();
-        tenant.setId(200);
-        tenant.setName("test1");
-        tenant.setUnitId(19);
-        when(tenantRepository.save(tenant)).thenReturn(tenant);
-        Tenant tenantSaved = tenantService.addTenant(tenant);
-        tenantSaved.setName("Test2");
-        when(tenantRepository.findById(tenant.getId())).thenReturn(Optional.of(tenant));
-        when(tenantRepository.save(tenant)).thenReturn(tenantSaved);
-        Tenant updatedTenant = tenantService.updateTenant(tenantSaved.getId(), tenantSaved);
-        Assertions.assertEquals("Test2", updatedTenant.getName());
-        Assertions.assertNotNull(updatedTenant);
+        Integer tenantId = 1;
+        Integer unitId = 1;
+        Tenant updatedTenant = new Tenant();
+        updatedTenant.setId(tenantId);
+        updatedTenant.setName("Updated Name");
+        Tenant existingTenant = new Tenant();
+        existingTenant.setId(tenantId);
+        existingTenant.setUnitId(unitId);
+        existingTenant.setName("existing Name");
+        Unit unit = new Unit();
+        unit.setId(unitId);
+        unit.setTenant(existingTenant);
+        when(tenantRepository.findById(tenantId)).thenReturn(Optional.of(existingTenant));
+        when(unitRepository.findById(unitId)).thenReturn(Optional.of(unit));
+        when(tenantRepository.save(existingTenant)).thenReturn(updatedTenant);
+        Tenant result = tenantService.updateTenant(tenantId, existingTenant);
+        Assertions.assertEquals("Updated Name", result.getName());
+        verify(tenantRepository, times(1)).findById(tenantId);
+        verify(unitRepository, times(1)).findById(unitId);
+        verify(unitService, times(1)).updateUnit(eq(unitId), any(Unit.class));
     }
     @Test
     public void deleteTenantTest() {

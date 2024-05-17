@@ -49,7 +49,7 @@ public class KPIController {
         }
     }
 
-    @PostMapping("/")
+    @PostMapping
     public ResponseEntity<Object> addKPI(@RequestBody KPI kpi) {
         logger.info("Enter getKPIById(@PathVariable Integer id)");
         kpiService.addKPI(kpi);
@@ -76,7 +76,7 @@ public class KPIController {
             logger.info("Enter deleteKPI(@PathVariable Integer id) Deleting KPI with {}", id);
             kpiService.deleteKPIById(id);
             logger.info("Exit deleteKPI(@PathVariable Integer id) Deleting KPI with {}", id);
-            return ResponseHandler.generateResponse("deleted succesfully", HttpStatus.CREATED, id);
+            return ResponseEntity.ok().build();
         } catch (DeviceNotFoundException e) {
             logger.error("Exit deleteKPI(@PathVariable Integer id) an KPINotFoundException exception occurred, {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
